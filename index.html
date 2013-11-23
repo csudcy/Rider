@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Rider</title>
+		<link href="main.css" rel="stylesheet" type="text/css">
+		<script type="text/javascript" src="main.js"></script>
+	</head>
+	<body>
+		<canvas id="board">
+
+		</canvas>
+		<br/>
+		<label>
+			<input type="radio" name="mode" value="node" checked="checked"/>
+			Node Edit
+		</label>
+		<label>
+			<input type="radio" name="mode" value="connection"/>
+			Connection Edit
+		</label>
+		<label>
+			<input type="radio" name="mode" value="play"/>
+			Play
+		</label>
+		<br/>
+		<button id="load_image">Load background image</button>
+		<button id="import">Import</button>
+		<button id="export">Export</button>
+
+		<div id="mask">
+			<div id="dialog_node" class="dialog">
+				<label>
+					Id:
+					<input id="node_id" type="text" disabled="disabled"/>
+				</label><br/>
+				<label>
+					X:
+					<input id="node_x" type="text" disabled="disabled"/>
+				</label><br/>
+				<label>
+					Y:
+					<input id="node_y" type="text" disabled="disabled"/>
+				</label><br/>
+				<label>
+					Name:
+					<input id="node_name" type="text"/>
+				</label><br/>
+				<button id="node_ok">Ok</button>
+				<button id="node_delete">Delete</button>
+				<button id="node_cancel">Cancel</button>
+			</div>
+			<div id="dialog_connection" class="dialog">
+				<label>
+					Id:
+					<span id="connection_id"></span>
+				</label><br/>
+				Node 1: <span id="connection_node_1"></span><br/>
+				Node 2: <span id="connection_node_2"></span><br/>
+				<label>
+					Colour 1:
+					<span id="connection_colour_1"></span>
+				</label><br/>
+				<label>
+					Colour 2:
+					<span id="connection_colour_2"></span>
+				</label><br/>
+				<label>
+					Tunnel:
+					<input id="connection_tunnel" type="checkbox"/>
+				</label><br/>
+				<label>
+					Locomotives:
+					<input id="connection_locomotives" type="number" value="0" min="0" max="10"/>
+				</label><br/>
+
+				<button id="connection_ok">Ok</button>
+				<button id="connection_delete">Delete</button>
+				<button id="connection_cancel">Cancel</button>
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,18 @@
+#board {
+	border: 1px solid black;
+}
+#mask {
+	position: absolute;
+	top: 0px;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+	background-color: rgba(0, 0, 0, 0.75);
+	display: none;
+}
+.dialog {
+	background-color: white;
+	width: 30%;
+	min-width: 400px;
+	margin:10% auto 0 auto;
+}
