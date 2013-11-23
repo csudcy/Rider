@@ -1,5 +1,11 @@
+#board_name {
+	font-weight: bold;
+	font-size: 18pt;
+}
 #board {
 	border: 1px solid black;
+	width: 800px;
+	height: 600px;
 }
 #mask {
 	position: absolute;

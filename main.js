@@ -23,8 +23,6 @@ Modes:
 		Double click connection to delete it
 	Play
 */
-var nodes = {},
-	connections = {};
 
 var COLOURS = {
 	red: {
@@ -97,10 +95,131 @@ function _close_dialogs() {
 	qs('#mask').style.display = 'none';
 }
 
-function _draw_layout() {
-	//Draw the nodes & connections onto the canvas
-	var c = qs('#board').getContext("2d");
+//Shortest distance from point to line segment
+//Adapted from http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+function sqr(x) { return x * x }
+function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y) }
+function distToSegmentSquared(p, v, w) {
+	//If the line length is zero, just return the distance from point to either line node
+	var l2 = dist2(v, w);
+	if (l2 == 0) return dist2(p, v);
+	//Maths, bitch!
+	var t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+	if (t < 0) return dist2(p, v);
+	if (t > 1) return dist2(p, w);
+	return dist2(
+		p,
+		{
+			x: v.x + t * (w.x - v.x),
+			y: v.y + t * (w.y - v.y)
+		});
+}
+function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)); }
+
+//Helpers to easily translate from page coordinates to canvas coordinates
+MouseEvent.prototype.canvasX = function() {
+	return Math.round(
+		(this.offsetX / this.currentTarget.clientWidth)
+		* this.currentTarget.width
+	);
+}
+MouseEvent.prototype.canvasY = function() {
+	return Math.round(
+		(this.offsetY / this.currentTarget.clientHeight)
+		* this.currentTarget.height
+	);
+}
+
+/********************************************\
+	Board helpers
+\********************************************/
+
+function _get_boards() {
+	return JSON.parse(localStorage.boards || '{}');
+}
+
+function _set_boards(boards) {
+	localStorage.boards = JSON.stringify(boards);
+}
+
+function _boards_iter(func) {
+	//Shortcut to iterate over the connections object
+	var boards = _get_boards();
+	Object.keys(boards).forEach(function(board_id) {
+		func(boards[board_id]);
+	});
+}
+
+var BOARD;
+function _new_board() {
+	//Create a new board
+	BOARD = {
+		name: 'New Board',
+		image: undefined,
+		nodes: {},
+		connections: {}
+	};
+	localStorage.last_board = undefined;
+}
+
+function _save_board() {
+	//Save the current board to localStorage
+	var boards = _get_boards();
+	boards[BOARD.name] = BOARD;
+	_set_boards(boards);
+	localStorage.last_board = BOARD.name;
+	alert('Board saved: ' + BOARD.name);
+}
+
+function _rename_board(new_board_name) {
+	//Rename the current board in localStorage
+	var boards = _get_boards();
+	//Only have to change localStorage if the board already exists there
+	if (BOARD.name in boards) {
+		//Remove the board
+		delete boards[BOARD.name];
+		//Change the name
+		BOARD.name = new_board_name;
+		//Then save the board again
+		boards[BOARD.name] = BOARD;
+		_set_boards(boards);
+		localStorage.last_board = BOARD.name;
+		alert('Board renamed: ' + BOARD.name);
+	} else {
+		//Just change the name
+		BOARD.name = new_board_name;
+	}
+}
+
+function _load_board(board_name) {
+	//Load the given board from localStorage
+	var boards = _get_boards();
+	if (board_name in boards) {
+		BOARD = boards[board_name];
+		localStorage.last_board = BOARD.name;
+	} else {
+		alert('Board not found: ' + board_name);
+	}
+}
+
+function _remove_board(board_name) {
+	//Remove the given board from localStorage
+	var boards = _get_boards();
+	if (board_name in boards) {
+		delete boards[board_name];
+		_set_boards(boards);
+		alert('Board removed: ' + board_name);
+	} else {
+		alert('Board not found: ' + board_name);
+	}
+}
+
+function _draw_board() {
+	//Update UI to the latest board state
+	//Update board name
+	qs('#board_name').innerHTML = BOARD.name;
 	//Clear the canvas
+	var c = qs('#board').getContext("2d");
 	c.fillStyle = 'white';
 	c.fillRect(0, 0, c.canvas.width, c.canvas.height);
 	//Draw the nodes
@@ -124,13 +243,14 @@ function _draw_layout() {
 \********************************************/
 
 function _nodes_iter(func) {
-	Object.keys(nodes).forEach(function(node_id) {
-		func(nodes[node_id]);
+	//Shortcut to iterate over the nodes object
+	Object.keys(BOARD.nodes).forEach(function(node_id) {
+		func(BOARD.nodes[node_id]);
 	});
 }
 
 function _find_node(x, y) {
-	//Find out if there is a node at (x,y)
+	//Find if there is a node at (x,y)
 	var min_d,
 		min_node;
 	_nodes_iter(function(node) {
@@ -147,13 +267,29 @@ function _find_node(x, y) {
 }
 
 function _add_node(x, y, name) {
-	//Add a new node at (x, y) with name
-	console.log('Todo: _add_node');
+	//Add a new node with the given attributes
+	//Find the first free id
+	var node_id = 0;
+	while (node_id in BOARD.nodes) {
+		node_id++;
+	}
+	//Add a new node
+	var node = {};
+	node.id = node_id;
+	node.x = parseInt(x, 10);
+	node.y = parseInt(y, 10);
+	node.name = name;
+	BOARD.nodes[node_id] = node;
 }
 
-function _remove_node(id) {
-	//Remove the node specified by id
-	console.log('Todo: _remove_node');
+function _remove_node(node_id) {
+	//Remove the node specified by id & any connections it is used by
+	_connections_iter(function(connection) {
+		if (connection.node1_id === node_id || connection.node2_id === node_id) {
+			_remove_connection(connection.id);
+		}
+	});
+	delete BOARD.nodes[node_id];
 }
 
 /********************************************\
@@ -161,81 +297,127 @@ function _remove_node(id) {
 \********************************************/
 
 function _connections_iter(func) {
-	Object.keys(connections).forEach(function(connection_id) {
-		func(connections[connection_id]);
+	//Shortcut to iterate over the connections object
+	Object.keys(BOARD.connections).forEach(function(connection_id) {
+		func(BOARD.connections[connection_id]);
 	});
 }
 
 function _find_connection(x, y) {
-	//Todo
+	//Find if there is a connection at x,y
 	console.log('Todo: _find_connection');
 }
 
 function _add_connection(node1, node2) {
-	//Todo
+	//Add a new connection with the given attributes
 	console.log('Todo: _add_connection');
+	//Find the first free id
+	var connection_id = 0;
+	while (connection_id in BOARD.connections) {
+		connection_id++;
+	}
+	//Add a new connection
 }
 
-function _remove_connection(id) {
-	//Todo
-	console.log('Todo: _remove_connection');
+function _remove_connection(connection_id) {
+	//Remove the connection specified by id
+	delete BOARD.connections[connection_id];
 }
 
 /********************************************\
 	Main click listeners
 \********************************************/
 
-function _load_image() {
-	//Todo
-	console.log('Todo: _load_image');
+function _load_image_click() {
+	//Load a background image for this board
+	console.log('Todo: _load_image_click');
 }
 
-function _export() {
-	//Todo
-	console.log('Todo: _export');
+function _export_board_click() {
+	//Export a board to textual representation
+	console.log('Todo: _export_board_click');
 }
 
-function _import() {
-	//Todo
-	console.log('Todo: _import');
+function _import_board_click() {
+	//Import a board from a textual representation
+	console.log('Todo: _import_board_click');
+}
+
+function _new_board_click() {
+	//Create a new board
+	if (confirm('Really create a new board?')) {
+		_new_board();
+		_draw_board();
+	}
+}
+
+function _save_board_click() {
+	//Save the current board
+	_save_board();
+}
+
+function _rename_board_click() {
+	//Rename the current board
+	var new_board_name = prompt('Board name:', BOARD.name);
+	if (new_board_name) {
+		_rename_board(new_board_name);
+		_draw_board();
+	}
+}
+
+function _load_board_click() {
+	//Load a board
+	//Put the list of boards in the dialog
+	var html = '', first = true;
+	_boards_iter(function(board) {
+		html += '<label><input type="radio" name="board" value="'+board.name+'"';
+		if (first) {
+			html += ' checked="checked"';
+			first = false;
+		}
+		html += '/>'+board.name+'</label><br/>';
+	})
+	if (html === '') {
+		alert('No saved boards found!');
+		_close_dialogs();
+		return;
+	}
+	qs('#board_list').innerHTML = html;
+	//Show the dialog
+	_open_dialog('#dialog_board');
 }
 
 /********************************************\
 	Node dialog click listeners
 \********************************************/
 
-function _node_ok() {
+function _node_ok_click() {
 	//Save the node currently being edited
-	console.log('Todo: _node_ok');
 	var node_id = qs('#node_id').value;
 	if (node_id) {
 		//Editing
-		var node = nodes[node_id];
+		var node = BOARD.nodes[node_id];
 		node.name = qs('#node_name').value;
 	} else {
-		//Find the first free id
-		var node_id = 0;
-		while (node_id in nodes) {
-			node_id++;
-		}
-		//Adding
-		var node = {};
-		node.id = node_id;
-		node.x = parseInt(qs('#node_x').value, 10);
-		node.y = parseInt(qs('#node_y').value, 10);
-		node.name = qs('#node_name').value;
-		nodes[node_id] = node;
+		_add_node(
+			qs('#node_x').value,
+			qs('#node_y').value,
+			qs('#node_name').value
+		);
 	}
 	_close_dialogs();
-	_draw_layout();
+	_draw_board();
 }
 
-function _node_delete() {
+function _node_delete_click() {
 	//Delete the node currently being edited
-	console.log('Todo: _node_delete');
+	var node_id = qs('#node_id').value;
+	if (node_id) _remove_node(node_id);
+	_close_dialogs();
+	_draw_board();
 }
 
-function _node_cancel() {
+function _node_cancel_click() {
 	//Close the node dialog
 	_close_dialogs();
 }
@@ -244,18 +426,51 @@ function _node_cancel() {
 	Connection dialog click listeners
 \********************************************/
 
-function _connection_ok() {
+function _connection_ok_click() {
 	//Save the connection currently being edited
 	console.log('Todo: _connection_ok');
 }
 
-function _connection_delete() {
+function _connection_delete_click() {
 	//Delete the connection currently being edited
 	console.log('Todo: _connection_delete');
 }
 
-function _connection_cancel() {
+function _connection_cancel_click() {
 	//Close the connection dialog
+	_close_dialogs();
+}
+
+
+/********************************************\
+	Board dialog click listeners
+\********************************************/
+
+function _board_load_click() {
+	//Load the selected board from localStorage
+	var board_id = qs('[name=board]:checked').value;
+	_load_board(board_id);
+	_draw_board();
+	_close_dialogs();
+}
+
+function _board_delete_click() {
+	//Delete the selected board from localStorage
+	var board_id = qs('[name=board]:checked').value;
+	if (confirm('Really delete board "'+board_id+'"?')) {
+		_remove_board(board_id);
+		//If the board is currently loaded, change to a new board
+		if (BOARD.name === board_id) {
+			_new_board();
+			_draw_board();
+		}
+	}
+	//Refresh the dialog
+	_load_board_click();
+}
+
+function _board_cancel_click() {
+	//Close the board dialog
 	_close_dialogs();
 }
 
@@ -267,23 +482,23 @@ var node_dragged = false,
 	node_current;
 
 function _canvas_mouse_move(e) {
-	//Todo
-	console.log('Todo: _canvas_mouse_move');
-	//console.log(e);
+	//Deal with what happens when the mouse is moved
+	//console.log('Todo: _canvas_mouse_move', e);
 	e.preventDefault();
+
 	switch (_get_mode()) {
 		case 'node':
 			node_dragged = true;
 			if (e.which == 1) {
 				//We could be dragging an element
 				if (node_current) {
-					node_current.x = e.offsetX;
-					node_current.y = e.offsetY;
-					_draw_layout();
+					node_current.x = e.canvasX();
+					node_current.y = e.canvasY();
+					_draw_board();
 				}
 			}
 			//Check what the mouse cursor should be
-			if (_find_node(e.offsetX, e.offsetY)) {
+			if (_find_node(e.canvasX(), e.canvasY())) {
 				qs('#board').style.cursor = 'pointer';
 			} else {
 				qs('#board').style.cursor = 'auto';
@@ -297,14 +512,13 @@ function _canvas_mouse_move(e) {
 }
 
 function _canvas_mouse_down(e) {
-	//Deal with what happens when the mouse is down
-	console.log('Todo: _canvas_mouse_down');
-	//console.log(e);
+	//Deal with what happens when the mouse is pressed
+	//console.log('Todo: _canvas_mouse_down', e);
 	e.preventDefault();
 	switch (_get_mode()) {
 		case 'node':
 			//Reset whether this mouse action has been a drag
-			node_current = _find_node(e.offsetX, e.offsetY);
+			node_current = _find_node(e.canvasX(), e.canvasY());
 			node_dragged = false;
 			break;
 		case 'connection':
@@ -316,32 +530,38 @@ function _canvas_mouse_down(e) {
 
 function _canvas_mouse_up(e) {
 	//Deal with what happens when the mouse is released
-	console.log('Todo: _canvas_mouse_up');
-	//console.log(e);
+	//console.log('Todo: _canvas_mouse_up', e);
 	e.preventDefault();
 	switch (_get_mode()) {
 		case 'node':
 			//Only open the node dialog if the mouse wasnt dragged
 			if (!node_dragged) {
-				//Find if we are over a node
-				var node = _find_node(e.offsetX, e.offsetY);
-				if (node) {
-					//Setup dialog for edit
-					qs('#node_id').value = node.id;
-					qs('#node_x').value = node.x;
-					qs('#node_y').value = node.y;
-					qs('#node_name').value = node.name;
-					qs('#node_delete').disabled = false;
+				if (e.which == 1) {
+					//Add/Edit node
+					if (node_current) {
+						//Setup dialog for edit
+						qs('#node_id').value = node_current.id;
+						qs('#node_x').value = node_current.x;
+						qs('#node_y').value = node_current.y;
+						qs('#node_name').value = node_current.name;
+						qs('#node_delete').disabled = false;
+					} else {
+						//Setup dialog for add
+						qs('#node_id').value = '';
+						qs('#node_x').value = e.canvasX();
+						qs('#node_y').value = e.canvasY();
+						qs('#node_name').value = '';
+						qs('#node_delete').disabled = true;
+					}
+					//Show the add node dialog
+					_open_dialog('#dialog_node');
 				} else {
-					//Setup dialog for add
-					qs('#node_id').value = '';
-					qs('#node_x').value = e.offsetX;
-					qs('#node_y').value = e.offsetY;
-					qs('#node_name').value = '';
-					qs('#node_delete').disabled = true;
+					//Delete node
+					if (node_current) {
+						_remove_node(node_current.id);
+						_draw_board();
+					}
 				}
-				//Show the add node dialog
-				_open_dialog('#dialog_node');
 			}
 			break;
 		case 'connection':
@@ -357,19 +577,32 @@ function _canvas_mouse_up(e) {
 
 document.onreadystatechange = function() {
 	if (document.readyState !== 'complete') return;
-	//Add click listeners
-	qs('#load_image').addEventListener('click', _load_image);
-	qs('#import').addEventListener('click', _import);
-	qs('#export').addEventListener('click', _export);
-	qs('#node_ok').addEventListener('click', _node_ok);
-	qs('#node_delete').addEventListener('click', _node_delete);
-	qs('#node_cancel').addEventListener('click', _node_cancel);
-	qs('#connection_ok').addEventListener('click', _connection_ok);
-	qs('#connection_delete').addEventListener('click', _connection_delete);
-	qs('#connection_cancel').addEventListener('click', _connection_cancel);
+	//General click handlers
+	qs('#load_image').addEventListener('click', _load_image_click);
+	qs('#import_board').addEventListener('click', _import_board_click);
+	qs('#export_board').addEventListener('click', _export_board_click);
+	qs('#new_board').addEventListener('click', _new_board_click);
+	qs('#save_board').addEventListener('click', _save_board_click);
+	qs('#rename_board').addEventListener('click', _rename_board_click);
+	qs('#load_board').addEventListener('click', _load_board_click);
 
+	//Node dialog click handlers
+	qs('#node_ok').addEventListener('click', _node_ok_click);
+	qs('#node_delete').addEventListener('click', _node_delete_click);
+	qs('#node_cancel').addEventListener('click', _node_cancel_click);
+
+	//Connection dialog click handlers
+	qs('#connection_ok').addEventListener('click', _connection_ok_click);
+	qs('#connection_delete').addEventListener('click', _connection_delete_click);
+	qs('#connection_cancel').addEventListener('click', _connection_cancel_click);
+
+	//Board dialog click handlers
+	qs('#board_load').addEventListener('click', _board_load_click);
+	qs('#board_delete').addEventListener('click', _board_delete_click);
+	qs('#board_cancel').addEventListener('click', _board_cancel_click);
+
+	//On escape, _close_dialogs
 	document.addEventListener('keyup', function(e) {
-		//On escape, _close_dialogs
 		if (e.which == 27) {
 			_close_dialogs();
 		}
@@ -380,4 +613,15 @@ document.onreadystatechange = function() {
 	board.addEventListener('mousemove', _canvas_mouse_move);
 	board.addEventListener('mousedown', _canvas_mouse_down);
 	board.addEventListener('mouseup', _canvas_mouse_up);
+
+	//Make the canvas the correct size
+	board.width = 800;
+	board.height = 600;
+
+	if (localStorage.last_board) {
+		_load_board(localStorage.last_board);
+	} else {
+		_new_board();
+	}
+	_draw_board();
 };

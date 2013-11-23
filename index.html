@@ -6,10 +6,12 @@
 		<script type="text/javascript" src="main.js"></script>
 	</head>
 	<body>
-		<canvas id="board">
-
-		</canvas>
+		<span id="board_name"></span>
 		<br/>
+
+		<canvas id="board"></canvas>
+		<br/>
+
 		<label>
 			<input type="radio" name="mode" value="node" checked="checked"/>
 			Node Edit
@@ -23,9 +25,16 @@
 			Play
 		</label>
 		<br/>
-		<button id="load_image">Load background image</button>
-		<button id="import">Import</button>
-		<button id="export">Export</button>
+
+		<button id="load_image">Add background image</button>
+		<button id="import_board">Import Board</button>
+		<button id="export_board">Export Board</button>
+		<br/>
+
+		<button id="new_board">New Board</button>
+		<button id="save_board">Save Board</button>
+		<button id="rename_board">Rename board</button>
+		<button id="load_board">Load Board</button>
 
 		<div id="mask">
 			<div id="dialog_node" class="dialog">
@@ -49,6 +58,7 @@
 				<button id="node_delete">Delete</button>
 				<button id="node_cancel">Cancel</button>
 			</div>
+
 			<div id="dialog_connection" class="dialog">
 				<label>
 					Id:
@@ -76,6 +86,14 @@
 				<button id="connection_ok">Ok</button>
 				<button id="connection_delete">Delete</button>
 				<button id="connection_cancel">Cancel</button>
+			</div>
+
+			<div id="dialog_board" class="dialog">
+				<span id="board_list"></span>
+
+				<button id="board_load">Load</button>
+				<button id="board_delete">Delete</button>
+				<button id="board_cancel">Cancel</button>
 			</div>
 		</div>
 	</body>
