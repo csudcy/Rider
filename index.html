@@ -26,9 +26,25 @@
 		</label>
 		<br/>
 
-		<button id="load_image">Add background image</button>
+		<input type="file" id="image_loader" style="display:none;"/>
+		<button id="load_image">Change image</button>
 		<button id="import_board">Import Board</button>
 		<button id="export_board">Export Board</button>
+		<br/>
+
+		Show:
+		<label>
+			<input id="show_image" class="board_option" type="checkbox" checked="checked"/>
+			Image
+		</label>
+		<label>
+			<input id="show_nodes" class="board_option" type="checkbox" checked="checked"/>
+			Nodes
+		</label>
+		<label>
+			<input id="show_connections" class="board_option" type="checkbox" checked="checked"/>
+			Connections
+		</label>
 		<br/>
 
 		<button id="new_board">New Board</button>
@@ -67,6 +83,10 @@
 				Node 1: <span id="connection_node_1"></span><br/>
 				Node 2: <span id="connection_node_2"></span><br/>
 				<label>
+					Length:
+					<input id="connection_length" type="number" value="0" min="0" max="10"/>
+				</label><br/>
+				<label>
 					Colour 1:
 					<span id="connection_colour_1"></span>
 				</label><br/>
@@ -94,6 +114,17 @@
 				<button id="board_load">Load</button>
 				<button id="board_delete">Delete</button>
 				<button id="board_cancel">Cancel</button>
+			</div>
+
+			<div id="dialog_export" class="dialog">
+				<textarea id="export_json"></textarea>
+				<button id="export_close">Close</button>
+			</div>
+
+			<div id="dialog_import" class="dialog">
+				<textarea id="import_json"></textarea>
+				<button id="import_import">Import</button>
+				<button id="import_cancel">Cancel</button>
 			</div>
 		</div>
 	</body>

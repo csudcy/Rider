@@ -1,7 +1,9 @@
 "use strict";
 /*
-Load background image
-Save/Load
+TODO:
+ * Connections
+ * Play
+
 Details:
 	Node
 		Name
@@ -81,13 +83,18 @@ function _get_mode() {
 	return qs('[name=mode]:checked').value;
 }
 
-function _open_dialog(selector) {
+function _open_dialog(dialog_selector, default_element_selector) {
 	//Show the given dialog
 	qs('#mask').style.display = 'block';
-	Array.prototype.slice.call(qsa('.dialog'), 0).forEach(function(e) {
+	qsa('.dialog').forEach(function(e) {
 		e.style.display = 'none';
 	});
-	qs(selector).style.display = 'block';
+	qs(dialog_selector).style.display = 'block';
+	if (default_element_selector) {
+		qs(default_element_selector).focus();
+		qs(default_element_selector).select();
+	}
+
 }
 
 function _close_dialogs() {
@@ -128,6 +135,10 @@ MouseEvent.prototype.canvasY = function() {
 		(this.offsetY / this.currentTarget.clientHeight)
 		* this.currentTarget.height
 	);
+}
+
+NodeList.prototype.forEach = function(func) {
+	Array.prototype.slice.call(this, 0).forEach(func);
 }
 
 /********************************************\
@@ -222,20 +233,38 @@ function _draw_board() {
 	var c = qs('#board').getContext("2d");
 	c.fillStyle = 'white';
 	c.fillRect(0, 0, c.canvas.width, c.canvas.height);
-	//Draw the nodes
-	_nodes_iter(function(node) {
-		//Draw the node
+	//Show the background image
+	if (BOARD.image && qs('#show_image').checked) {
+		var img = new Image();
+		img.src = BOARD.image;
+		c.drawImage(img, 0, 0);
+	}
+
+	if (qs('#show_nodes').checked) {
+		//Draw the nodes
 		c.fillStyle = 'black';
-		c.beginPath();
-		c.arc(node.x, node.y, NODE_R, 0, 2 * Math.PI);
-		c.fill();
-		//Draw the name
-		c.font = "20px Georgia";
-		c.fillText(node.name, node.x+NODE_R, node.y+NODE_R);
-	});
-	//Draw the connections
-	_connections_iter(function(connection) {
-	});
+		c.lineWidth = 0.5;
+		c.strokeStyle = 'white';
+		c.font = "20px Arial bold";
+		c.textAlign = 'center';
+		c.textBaseline = 'top';
+		_nodes_iter(function(node) {
+			//Draw the node
+			c.beginPath();
+			c.arc(node.x, node.y, NODE_R, 0, 2 * Math.PI);
+			c.fill();
+			c.stroke();
+			//Draw the name
+			c.fillText(node.name, node.x, node.y+NODE_R);
+			c.strokeText(node.name, node.x, node.y+NODE_R);
+		});
+	}
+
+	if (qs('#show_connections').checked) {
+		//Draw the connections
+		_connections_iter(function(connection) {
+		});
+	}
 }
 
 /********************************************\
@@ -331,16 +360,79 @@ function _remove_connection(connection_id) {
 function _load_image_click() {
 	//Load a background image for this board
 	console.log('Todo: _load_image_click');
+	qs('#image_loader').click();
 }
+
+function _image_loader_change(e) {
+	//Deal with a new background image being selected
+	var file = e.target.files[0];
+
+	if (!file) {
+		//No file selected, clear background image
+		BOARD.image = undefined;
+		_draw_board();
+		return;
+	}
+
+	// Only process image files.
+	if (!file.type.match('image.*')) {
+		alert('You must select an image!');
+		return;
+	}
+
+	// Read the File objects in this FileList.
+	var reader = new FileReader();
+	// Listener for the onload event
+	reader.onload = function(e) {
+		// Create an unattached img element for manipulation
+		var img = document.createElement('img');
+		img.src = e.target.result;
+
+		// Create a canvas to resize the image
+		var canvas = document.createElement('canvas');
+		var ctx = canvas.getContext('2d');
+		canvas.width = qs('#board').width;
+		canvas.height = qs('#board').height;
+
+		// Work out what ratio to scale to
+		var scale = Math.min(canvas.width / img.width, img.height / canvas.height);
+
+		// Resize image
+		ctx.drawImage(
+			img,
+			0,
+			0,
+			img.width,
+			img.height,
+			0,
+			0,
+			img.width * scale,
+			img.height * scale
+		);
+
+		// Save resized iamge to the board
+		BOARD.image = canvas.toDataURL();
+		_draw_board();
+	};
+	// Read in the image file as a data URL.
+	reader.readAsDataURL(file);
+};
 
 function _export_board_click() {
 	//Export a board to textual representation
-	console.log('Todo: _export_board_click');
+	qs('#export_json').value = JSON.stringify(BOARD);
+	_open_dialog('#dialog_export');
+}
+
+function _board_option_change() {
+	//Change whether something about the board is shown or hidden
+	_draw_board();
 }
 
 function _import_board_click() {
 	//Import a board from a textual representation
-	console.log('Todo: _import_board_click');
+	qs('#import_json').value = '';
+	_open_dialog('#dialog_import');
 }
 
 function _new_board_click() {
@@ -475,6 +567,35 @@ function _board_cancel_click() {
 }
 
 /********************************************\
+	Export dialog click listeners
+\********************************************/
+
+function _export_close_click() {
+	//Close the export dialog
+	_close_dialogs();
+}
+
+/********************************************\
+	Import dialog click listeners
+\********************************************/
+
+function _import_import_click() {
+	//Import the board that has been pasted into the textarea
+	var board_json = qs('#import_json').value;
+	if (board_json) {
+		var board = JSON.parse(board_json);
+		BOARD = board;
+		_draw_board();
+	}
+	_close_dialogs();
+}
+
+function _import_cancel_click() {
+	//Close the import dialog
+	_close_dialogs();
+}
+
+/********************************************\
 	Canvas listeners
 \********************************************/
 
@@ -554,7 +675,7 @@ function _canvas_mouse_up(e) {
 						qs('#node_delete').disabled = true;
 					}
 					//Show the add node dialog
-					_open_dialog('#dialog_node');
+					_open_dialog('#dialog_node', '#node_name');
 				} else {
 					//Delete node
 					if (node_current) {
@@ -579,8 +700,14 @@ document.onreadystatechange = function() {
 	if (document.readyState !== 'complete') return;
 	//General click handlers
 	qs('#load_image').addEventListener('click', _load_image_click);
+	qs("#image_loader").addEventListener('change', _image_loader_change);
 	qs('#import_board').addEventListener('click', _import_board_click);
 	qs('#export_board').addEventListener('click', _export_board_click);
+
+	qsa(".board_option").forEach(function(e) {
+		e.addEventListener('change', _board_option_change);
+	});
+
 	qs('#new_board').addEventListener('click', _new_board_click);
 	qs('#save_board').addEventListener('click', _save_board_click);
 	qs('#rename_board').addEventListener('click', _rename_board_click);
@@ -590,6 +717,11 @@ document.onreadystatechange = function() {
 	qs('#node_ok').addEventListener('click', _node_ok_click);
 	qs('#node_delete').addEventListener('click', _node_delete_click);
 	qs('#node_cancel').addEventListener('click', _node_cancel_click);
+	qs('#node_name').addEventListener('keyup', function(e) {
+		if (e.which == 13) {
+			_node_ok_click();
+		}
+	});
 
 	//Connection dialog click handlers
 	qs('#connection_ok').addEventListener('click', _connection_ok_click);
@@ -600,6 +732,13 @@ document.onreadystatechange = function() {
 	qs('#board_load').addEventListener('click', _board_load_click);
 	qs('#board_delete').addEventListener('click', _board_delete_click);
 	qs('#board_cancel').addEventListener('click', _board_cancel_click);
+
+	//Export dialog click handlers
+	qs('#export_close').addEventListener('click', _export_close_click);
+
+	//Import dialog click handlers
+	qs('#import_import').addEventListener('click', _import_import_click);
+	qs('#import_cancel').addEventListener('click', _import_cancel_click);
 
 	//On escape, _close_dialogs
 	document.addEventListener('keyup', function(e) {

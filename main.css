@@ -22,3 +22,7 @@
 	min-width: 400px;
 	margin:10% auto 0 auto;
 }
+textarea {
+	width: 95%;
+	height: 300px;
+}
