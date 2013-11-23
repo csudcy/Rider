@@ -78,21 +78,29 @@
 			<div id="dialog_connection" class="dialog">
 				<label>
 					Id:
-					<span id="connection_id"></span>
+					<input id="connection_id" type="text" disabled="disabled"/>
 				</label><br/>
-				Node 1: <span id="connection_node_1"></span><br/>
-				Node 2: <span id="connection_node_2"></span><br/>
+				<label>
+					Node 1:
+					<input id="connection_node1" type="text" disabled="disabled"/>
+					<input id="connection_node1_id" type="hidden"/>
+				</label><br/>
+				<label>
+					Node 2:
+					<input id="connection_node2" type="text" disabled="disabled"/>
+					<input id="connection_node2_id" type="hidden"/>
+				</label><br/>
 				<label>
 					Length:
 					<input id="connection_length" type="number" value="0" min="0" max="10"/>
 				</label><br/>
 				<label>
 					Colour 1:
-					<span id="connection_colour_1"></span>
+					<span id="connection_colour1"></span>
 				</label><br/>
 				<label>
 					Colour 2:
-					<span id="connection_colour_2"></span>
+					<span id="connection_colour2"></span>
 				</label><br/>
 				<label>
 					Tunnel:
