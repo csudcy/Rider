@@ -301,7 +301,6 @@ function _draw_board() {
 
 		c.lineWidth = 0.5;
 		BOARD.objectives.forEach(function(objective, index) {
-			console.log(index);
 			var node1 = BOARD.nodes[objective.node1],
 				node2 = BOARD.nodes[objective.node2];
 			c.fillStyle = COLOURS[COLOUR_KEYS[index]].colour;
