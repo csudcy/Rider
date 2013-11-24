@@ -528,7 +528,7 @@ function _image_loader_change(e) {
 		);
 
 		// Save resized iamge to the board
-		BOARD.image = canvas.toDataURL();
+		BOARD.image = canvas.toDataURL('image/jpeg', 0.5);
 		_draw_board();
 	};
 	// Read in the image file as a data URL.
