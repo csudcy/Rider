@@ -221,6 +221,7 @@ function _load_board(board_name) {
 			node.label_y = node.label_y || NODE_R;
 		});
 		BOARD.objectives = BOARD.objectives || [];
+		//Save that this was the latest board loaded
 		localStorage.last_board = BOARD.name;
 	} else {
 		alert('Board not found: ' + board_name);
@@ -400,6 +401,14 @@ function _remove_node(node_id) {
 			_remove_connection(connection.id);
 		}
 	});
+	var new_objectives = [];
+	BOARD.objectives.forEach(function(objective) {
+		console.log(objective);
+		if (objective.node1 !== node_id && objective.node2 !== node_id) {
+			new_objectives.push(objective);
+		}
+	});
+	BOARD.objectives = new_objectives;
 	delete BOARD.nodes[node_id];
 }
 
@@ -775,8 +784,8 @@ function _objective_add_click() {
 	//Add the selected objective
 	//qs('#objective_node1 option:selected')
 	BOARD.objectives.push({
-		node1: qs('#objective_node1').value,
-		node2: qs('#objective_node2').value
+		node1: parseInt(qs('#objective_node1').value, 10),
+		node2: parseInt(qs('#objective_node2').value, 10)
 	});
 	_draw_board();
 	_close_dialogs();
