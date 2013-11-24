@@ -240,6 +240,29 @@ function _draw_board() {
 		c.drawImage(img, 0, 0);
 	}
 
+	if (qs('#show_connections').checked) {
+		//Draw the connections
+		_connections_iter(function(connection) {
+			var n1 = BOARD.nodes[connection.node1],
+				n2 = BOARD.nodes[connection.node2];
+			c.beginPath();
+			c.moveTo(n1.x, n1.y);
+			c.lineTo(n2.x, n2.y);
+			if (connection.tunnel) {
+				c.strokeStyle = 'black';
+				c.lineWidth = 4;
+			} else {
+				c.strokeStyle = 'black';
+				c.lineWidth = 5;
+			}
+			c.stroke();
+			c.lineWidth = 3;
+			c.strokeStyle = COLOURS[connection.colour1].colour;
+			c.stroke();
+		});
+	}
+
+
 	if (qs('#show_nodes').checked) {
 		//Draw the nodes
 		c.fillStyle = 'black';
@@ -259,24 +282,6 @@ function _draw_board() {
 			c.strokeText(node.name, node.x, node.y+NODE_R);
 		});
 	}
-
-	if (qs('#show_connections').checked) {
-		//Draw the connections
-		_connections_iter(function(connection) {
-			var n1 = BOARD.nodes[connection.node1],
-				n2 = BOARD.nodes[connection.node2];
-			c.beginPath();
-			c.moveTo(n1.x, n1.y);
-			c.lineTo(n2.x, n2.y);
-			c.lineWidth = 2;
-			c.strokeStyle = 'white';
-			c.stroke();
-			c.lineWidth = 1;
-			c.strokeStyle = 'black';
-			c.stroke();
-		});
-	}
-
 	//Allow others to draw on the board too
 	return c;
 }
@@ -348,7 +353,6 @@ function _connections_iter(func) {
 
 function _find_connection(x, y) {
 	//Find if there is a connection at x,y
-	console.log('Todo: _find_connection');
 	var min_d,
 		min_connection,
 		p = {x:x, y:y};
@@ -577,7 +581,7 @@ function _connection_ok_click() {
 		connection.length = parseInt(qs('#connection_length').value, 10);
 		connection.colour1 = qs('[name=connection_colour_node1]:checked').value;
 		connection.colour2 = qs('[name=connection_colour_node2]:checked').value;
-		connection.tunnel = qs('#connection_tunnel').value;
+		connection.tunnel = qs('#connection_tunnel').checked;
 		connection.locomotives = parseInt(qs('#connection_locomotives').value, 10);
 	} else {
 		_add_connection(
@@ -586,7 +590,7 @@ function _connection_ok_click() {
 			qs('#connection_length').value,
 			qs('[name=connection_colour_node1]:checked').value,
 			qs('[name=connection_colour_node2]:checked').value,
-			qs('#connection_tunnel').value,
+			qs('#connection_tunnel').checked,
 			qs('#connection_locomotives').value
 		);
 	}
@@ -676,7 +680,7 @@ function _import_cancel_click() {
 \********************************************/
 
 //Mouse tracking vars
-var node_dragged = false,
+var mouse_dragged = false,
 	node_current,
 	connection_current;
 
@@ -687,11 +691,18 @@ function _canvas_mouse_down(e) {
 	switch (_get_mode()) {
 		case 'node':
 			node_current = _find_node(e.canvasX(), e.canvasY());
-			node_dragged = false;
+			mouse_dragged = false;
 			break;
 		case 'connection':
+			//If we are over a node, we can start a new connection
 			node_current = _find_node(e.canvasX(), e.canvasY());
-			node_dragged = false;
+			if (!node_current) {
+				//Otherwise, we might be going to click on a line
+				connection_current = _find_connection(e.canvasX(), e.canvasY());
+			} else {
+				connection_current = undefined;
+			}
+			mouse_dragged = false;
 			break;
 		case 'play':
 			break;
@@ -705,7 +716,7 @@ function _canvas_mouse_move(e) {
 
 	switch (_get_mode()) {
 		case 'node':
-			node_dragged = true;
+			mouse_dragged = true;
 			if (e.which == 1) {
 				//We could be dragging an element
 				if (node_current) {
@@ -723,7 +734,7 @@ function _canvas_mouse_move(e) {
 			}
 			break;
 		case 'connection':
-			node_dragged = true;
+			mouse_dragged = true;
 			if (e.which == 1) {
 				if (node_current) {
 					//We are creating a new connection
@@ -765,7 +776,7 @@ function _canvas_mouse_up(e) {
 	switch (_get_mode()) {
 		case 'node':
 			//Only open the node dialog if the mouse wasnt dragged
-			if (!node_dragged) {
+			if (!mouse_dragged) {
 				if (e.which == 1) {
 					//Add/Edit node
 					if (node_current) {
@@ -795,31 +806,55 @@ function _canvas_mouse_up(e) {
 			}
 			break;
 		case 'connection':
-			if (node_dragged && node_current && e.which === 1) {
-				//We are making a new connection, find out if we connected to anyting
-				var node_target = _find_node(e.canvasX(), e.canvasY());
-				if (node_target && node_target.id !== node_current.id) {
-					//Check if the link exists already
-					if (_find_connection_by_node(node_current.id, node_target.id)) {
-						alert('That connection already exists!');
-						_draw_board();
+			if (mouse_dragged) {
+				if (e.which === 1 && node_current) {
+					//We are making a new connection, find out if we connected to anyting
+					var node_target = _find_node(e.canvasX(), e.canvasY());
+					if (node_target && node_target.id !== node_current.id) {
+						//Check if the link exists already
+						if (_find_connection_by_node(node_current.id, node_target.id)) {
+							alert('That connection already exists!');
+							_draw_board();
+						} else {
+							//Create a new connection now
+							qs('#connection_id').value = '';
+							qs('#connection_node1').value = node_current.name;
+							qs('#connection_node1_id').value = node_current.id;
+							qs('#connection_node2').value = node_target.name;
+							qs('#connection_node2_id').value = node_target.id;
+							qs('#connection_length').value = 1;
+							qs('[name=connection_colour_node1]').checked = true;
+							qs('[name=connection_colour_node2][value=none]').checked = true;
+							qs('#connection_tunnel').checked = false;
+							qs('#connection_locomotives').value = 0;
+							qs('#connection_delete').disabled = true;
+							_open_dialog('#dialog_connection');
+						}
 					} else {
-						//Create a new connection now
-						qs('#connection_id').value = '';
-						qs('#connection_node1').value = node_current.name;
-						qs('#connection_node1_id').value = node_current.id;
-						qs('#connection_node2').value = node_target.name;
-						qs('#connection_node2_id').value = node_target.id;
-						qs('#connection_length').value = 1;
-						qs('[name=connection_colour_node1]').checked = true;
-						qs('[name=connection_colour_node2][value=none]').checked = true;
-						qs('#connection_tunnel').checked = false;
-						qs('#connection_locomotives').value = 0;
-						qs('#node_delete').disabled = true;
-						_open_dialog('#dialog_connection');
+						//No connection, clear the dragged line from the board
+						_draw_board();
 					}
+				}
+			} else if (!mouse_dragged && connection_current) {
+				if (e.which === 1) {
+					//Edit the connection
+					var n1 = BOARD.nodes[connection_current.node1],
+						n2 = BOARD.nodes[connection_current.node2];
+					qs('#connection_id').value = connection_current.id;
+					qs('#connection_node1').value = n1.name;
+					qs('#connection_node1_id').value = n1.id;
+					qs('#connection_node2').value = n2.name;
+					qs('#connection_node2_id').value = n2.id;
+					qs('#connection_length').value = connection_current.length;
+					qs('[name=connection_colour_node1][value='+connection_current.colour1+']').checked = true;
+					qs('[name=connection_colour_node2][value='+connection_current.colour2+']').checked = true;
+					qs('#connection_tunnel').checked = connection_current.tunnel;
+					qs('#connection_locomotives').value = connection_current.locomotives;
+					qs('#connection_delete').disabled = false;
+					_open_dialog('#dialog_connection');
 				} else {
-					//No connection, clear the dragged line from the board
+					//Delete the connection
+					_remove_connection(connection_current.id);
 					_draw_board();
 				}
 			}
