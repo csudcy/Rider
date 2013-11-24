@@ -213,6 +213,11 @@ function _load_board(board_name) {
 	var boards = _get_boards();
 	if (board_name in boards) {
 		BOARD = boards[board_name];
+		//Check all is good with the board
+		_nodes_iter(function(node) {
+			node.label_x = node.label_x || NODE_R;
+			node.label_y = node.label_y || NODE_R;
+		});
 		localStorage.last_board = BOARD.name;
 	} else {
 		alert('Board not found: ' + board_name);
@@ -284,18 +289,23 @@ function _draw_board() {
 		c.fillStyle = 'black';
 		c.lineWidth = 0.5;
 		c.strokeStyle = 'white';
-		c.font = "20px Arial bold";
-		c.textAlign = 'center';
-		c.textBaseline = 'top';
 		_nodes_iter(function(node) {
-			//Draw the node
 			c.beginPath();
 			c.arc(node.x, node.y, NODE_R, 0, 2 * Math.PI);
 			c.fill();
 			c.stroke();
-			//Draw the name
-			c.fillText(node.name, node.x, node.y+NODE_R);
-			c.strokeText(node.name, node.x, node.y+NODE_R);
+		});
+	}
+
+	if (qs('#show_labels').checked) {
+		//Draw the labels
+		c.fillStyle = 'black';
+		c.lineWidth = 1;
+		c.strokeStyle = 'white';
+		c.font = "20px Arial bold";
+		_nodes_iter(function(node) {
+			c.fillText(node.name, node.x+node.label_x, node.y+node.label_y);
+			c.strokeText(node.name, node.x+node.label_x, node.y+node.label_y);
 		});
 	}
 	//Allow others to draw on the board too
@@ -330,6 +340,25 @@ function _find_node(x, y) {
 	return min_node;
 }
 
+function _find_node_label(x, y) {
+	//Find if there is a node's label at (x,y)
+	var min_d,
+		min_node;
+	_nodes_iter(function(node) {
+		//Calc distance from x,y to node.x+node.label_x,node.y+node.label_y
+		var dx = x - (node.x + node.label_x),
+			dy = (node.y + node.label_y) - y;
+		if (dx >= 0 && dx <= 2*NODE_R && dy >= 0 && dy <= 2*NODE_R) {
+			var d = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+			if (min_d === undefined || d < min_d) {
+				min_d = d;
+				min_node = node;
+			}
+		}
+	});
+	return min_node;
+}
+
 function _add_node(x, y, name) {
 	//Add a new node with the given attributes
 	//Find the first free id
@@ -342,6 +371,8 @@ function _add_node(x, y, name) {
 		id: node_id,
 		x: parseInt(x, 10),
 		y: parseInt(y, 10),
+		label_x: NODE_R,
+		label_y: NODE_R,
 		name: name
 	};
 }
@@ -698,15 +729,23 @@ function _import_cancel_click() {
 //Mouse tracking vars
 var mouse_dragged = false,
 	node_current,
-	connection_current;
+	connection_current,
+	label_current;
 
 function _canvas_mouse_down(e) {
 	//Deal with what happens when the mouse is pressed
 	//console.log('Todo: _canvas_mouse_down', e);
 	e.preventDefault();
+	//Reset everything
 	switch (_get_mode()) {
 		case 'node':
 			node_current = _find_node(e.canvasX(), e.canvasY());
+			if (!node_current) {
+				//Otherwise, we might be going to click on a line
+				label_current = _find_node_label(e.canvasX(), e.canvasY());
+			} else {
+				label_current = undefined;
+			}
 			mouse_dragged = false;
 			break;
 		case 'connection':
@@ -730,6 +769,8 @@ function _canvas_mouse_move(e) {
 	//console.log('Todo: _canvas_mouse_move', e);
 	e.preventDefault();
 
+	var cursor = 'auto';
+
 	switch (_get_mode()) {
 		case 'node':
 			mouse_dragged = true;
@@ -739,15 +780,23 @@ function _canvas_mouse_move(e) {
 					node_current.x = e.canvasX();
 					node_current.y = e.canvasY();
 					_draw_board();
+					cursor = 'pointer';
+				} else if (label_current) {
+					label_current.label_x = e.canvasX() - label_current.x;
+					label_current.label_y = e.canvasY() - label_current.y;
+					_draw_board();
+					cursor = 'crosshair';
 				}
+			} else {
+				//Check what the mouse cursor should be
+				if (_find_node(e.canvasX(), e.canvasY())) {
+					cursor = 'pointer';
+				} else if (_find_node_label(e.canvasX(), e.canvasY())) {
+					cursor = 'crosshair';
+				}
+
 			}
 
-			//Check what the mouse cursor should be
-			if (_find_node(e.canvasX(), e.canvasY())) {
-				qs('#board').style.cursor = 'pointer';
-			} else {
-				qs('#board').style.cursor = 'auto';
-			}
 			break;
 		case 'connection':
 			mouse_dragged = true;
@@ -770,19 +819,16 @@ function _canvas_mouse_move(e) {
 			//Check what the mouse cursor should be
 			if (_find_node(e.canvasX(), e.canvasY())) {
 				//Over a node
-				qs('#board').style.cursor = 'crosshair';
-			} else {
-				//Check if we are over a connection
-				if (_find_connection(e.canvasX(), e.canvasY())) {
-					qs('#board').style.cursor = 'pointer';
-				} else {
-					qs('#board').style.cursor = 'auto';
-				}
+				cursor = 'crosshair';
+			} else if (_find_connection(e.canvasX(), e.canvasY())) {
+				cursor = 'pointer';
 			}
 			break;
 		case 'play':
 			break;
 	}
+
+	qs('#board').style.cursor = cursor;
 }
 
 function _canvas_mouse_up(e) {
@@ -800,6 +846,8 @@ function _canvas_mouse_up(e) {
 						qs('#node_id').value = node_current.id;
 						qs('#node_x').value = node_current.x;
 						qs('#node_y').value = node_current.y;
+						qs('#node_label_x').value = node_current.label_x;
+						qs('#node_label_y').value = node_current.label_y;
 						qs('#node_name').value = node_current.name;
 						qs('#node_delete').disabled = false;
 					} else {
@@ -807,6 +855,8 @@ function _canvas_mouse_up(e) {
 						qs('#node_id').value = '';
 						qs('#node_x').value = e.canvasX();
 						qs('#node_y').value = e.canvasY();
+						qs('#node_label_x').value = NODE_R;
+						qs('#node_label_y').value = NODE_R;
 						qs('#node_name').value = '';
 						qs('#node_delete').disabled = true;
 					}
@@ -945,7 +995,7 @@ document.onreadystatechange = function() {
 
 	//Make the canvas the correct size
 	board.width = 800;
-	board.height = 600;
+	board.height = 510;
 
 	if (localStorage.last_board) {
 		_load_board(localStorage.last_board);
