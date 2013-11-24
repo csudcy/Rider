@@ -28,44 +28,45 @@ Modes:
 */
 
 var COLOURS = {
-	red: {
-		id: 'red',
-		colour: '#F00'
+		red: {
+			id: 'red',
+			colour: '#F00'
+		},
+		green: {
+			id: 'green',
+			colour: '#0F0'
+		},
+		blue: {
+			id: 'blue',
+			colour: '#00F'
+		},
+		black: {
+			id: 'black',
+			colour: '#000'
+		},
+		grey: {
+			id: 'grey',
+			colour: '#999'
+		},
+		white: {
+			id: 'white',
+			colour: '#FFF'
+		},
+		yellow: {
+			id: 'yellow',
+			colour: '#FF0'
+		},
+		pink: {
+			id: 'pink',
+			colour: '#F0F'
+		},
+		orange: {
+			id: 'orange',
+			colour: '#F80'
+		}
 	},
-	green: {
-		id: 'green',
-		colour: '#0F0'
-	},
-	blue: {
-		id: 'blue',
-		colour: '#00F'
-	},
-	black: {
-		id: 'black',
-		colour: '#000'
-	},
-	grey: {
-		id: 'grey',
-		colour: '#999'
-	},
-	white: {
-		id: 'white',
-		colour: '#FFF'
-	},
-	yellow: {
-		id: 'yellow',
-		colour: '#FF0'
-	},
-	pink: {
-		id: 'pink',
-		colour: '#F0F'
-	},
-	orange: {
-		id: 'orange',
-		colour: '#F80'
-	}
-};
-var NODE_R = 10;
+	COLOUR_KEYS = Object.keys(COLOURS),
+	NODE_R = 10;
 
 /********************************************\
 	General helpers
@@ -174,7 +175,8 @@ function _new_board() {
 		name: 'New Board',
 		image: undefined,
 		nodes: {},
-		connections: {}
+		connections: {},
+		objectives: []
 	};
 	localStorage.last_board = undefined;
 }
@@ -218,6 +220,7 @@ function _load_board(board_name) {
 			node.label_x = node.label_x || NODE_R;
 			node.label_y = node.label_y || NODE_R;
 		});
+		BOARD.objectives = BOARD.objectives || [];
 		localStorage.last_board = BOARD.name;
 	} else {
 		alert('Board not found: ' + board_name);
@@ -294,6 +297,20 @@ function _draw_board() {
 			c.arc(node.x, node.y, NODE_R, 0, 2 * Math.PI);
 			c.fill();
 			c.stroke();
+		});
+
+		c.lineWidth = 0.5;
+		BOARD.objectives.forEach(function(objective, index) {
+			console.log(index);
+			var node1 = BOARD.nodes[objective.node1],
+				node2 = BOARD.nodes[objective.node2];
+			c.fillStyle = COLOURS[COLOUR_KEYS[index]].colour;
+			c.beginPath();
+			c.arc(node1.x, node1.y, NODE_R/2, 0, 2 * Math.PI);
+			c.fill();
+			c.beginPath();
+			c.arc(node2.x, node2.y, NODE_R/2, 0, 2 * Math.PI);
+			c.fill();
 		});
 	}
 
@@ -580,6 +597,35 @@ function _load_board_click() {
 	_open_dialog('#dialog_board');
 }
 
+function _add_objective_click() {
+	//Add an objective
+	//Sort nodes by name
+	var node_list = [];
+	_nodes_iter(function(node) {
+		node_list.push(node);
+	})
+	node_list = node_list.sort(function(a, b) {
+		return a.name.localeCompare(b.name);
+	});
+	//Populate the list of nodes
+	var html = '';
+	node_list.forEach(function(node) {
+		html += '<option value="'+node.id+'">'+node.name+'</option>';
+	});
+	qs('#objective_node1').innerHTML = html;
+	qs('#objective_node2').innerHTML = html;
+	//Show the objective dialog
+	_open_dialog('#dialog_objective');
+}
+
+function _clear_objectives_click() {
+	//Clear the objectives
+	if (confirm('Really clear objectives?')) {
+		BOARD.objectives.length = 0;
+		_draw_board();
+	}
+}
+
 /********************************************\
 	Node dialog click listeners
 \********************************************/
@@ -719,6 +765,26 @@ function _import_import_click() {
 
 function _import_cancel_click() {
 	//Close the import dialog
+	_close_dialogs();
+}
+
+/********************************************\
+	Objective dialog click listeners
+\********************************************/
+
+function _objective_add_click() {
+	//Add the selected objective
+	//qs('#objective_node1 option:selected')
+	BOARD.objectives.push({
+		node1: qs('#objective_node1').value,
+		node2: qs('#objective_node2').value
+	});
+	_draw_board();
+	_close_dialogs();
+}
+
+function _objective_cancel_click() {
+	//Close the objective dialog
 	_close_dialogs();
 }
 
@@ -951,6 +1017,9 @@ document.onreadystatechange = function() {
 	qs('#rename_board').addEventListener('click', _rename_board_click);
 	qs('#load_board').addEventListener('click', _load_board_click);
 
+	qs('#add_objective').addEventListener('click', _add_objective_click);
+	qs('#clear_objectives').addEventListener('click', _clear_objectives_click);
+
 	//Node dialog click handlers
 	qs('#node_ok').addEventListener('click', _node_ok_click);
 	qs('#node_delete').addEventListener('click', _node_delete_click);
@@ -977,6 +1046,10 @@ document.onreadystatechange = function() {
 	//Import dialog click handlers
 	qs('#import_import').addEventListener('click', _import_import_click);
 	qs('#import_cancel').addEventListener('click', _import_cancel_click);
+
+	//Objective dialog click handlers
+	qs('#objective_add').addEventListener('click', _objective_add_click);
+	qs('#objective_cancel').addEventListener('click', _objective_cancel_click);
 
 	//On escape, _close_dialogs
 	document.addEventListener('keyup', function(e) {

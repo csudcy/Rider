@@ -15,16 +15,16 @@
 
 		<span>
 			<label>
-				<input type="radio" name="mode" value="node" checked="checked"/>
+				<input type="radio" name="mode" value="play" checked="checked"/>
+				Play
+			</label>
+			<label>
+				<input type="radio" name="mode" value="node"/>
 				Node Edit
 			</label>
 			<label>
 				<input type="radio" name="mode" value="connection"/>
 				Connection Edit
-			</label>
-			<label>
-				<input type="radio" name="mode" value="play"/>
-				Play
 			</label>
 			<br/>
 
@@ -57,6 +57,10 @@
 			<button id="save_board">Save Board</button>
 			<button id="rename_board">Rename board</button>
 			<button id="load_board">Load Board</button>
+			<br/>
+
+			<button id="add_objective">Add Objective</button>
+			<button id="clear_objectives">Clear Objectives</button>
 		</span>
 
 		<div id="mask">
@@ -148,6 +152,20 @@
 				<textarea id="import_json"></textarea>
 				<button id="import_import">Import</button>
 				<button id="import_cancel">Cancel</button>
+			</div>
+
+			<div id="dialog_objective" class="dialog">
+				<label>
+					Node 1:
+					<select id="objective_node1"></select>
+				</label><br/>
+				<label>
+					Node 2:
+					<select id="objective_node2"></select>
+				</label><br/>
+
+				<button id="objective_add">Add</button>
+				<button id="objective_cancel">Cancel</button>
 			</div>
 		</div>
 	</body>
