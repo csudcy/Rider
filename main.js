@@ -1,7 +1,8 @@
 "use strict";
 /*
 TODO:
- * Connections
+ * Station name placement
+ * Show conection length & locomotives
  * Play
 
 Details:
@@ -141,6 +142,11 @@ NodeList.prototype.forEach = function(func) {
 	Array.prototype.slice.call(this, 0).forEach(func);
 }
 
+CanvasRenderingContext2D.prototype.removeLineDash = function() {
+	//Remove any dash that's been set
+	this.setLineDash([1,0]);
+}
+
 /********************************************\
 	Board helpers
 \********************************************/
@@ -245,23 +251,33 @@ function _draw_board() {
 		_connections_iter(function(connection) {
 			var n1 = BOARD.nodes[connection.node1],
 				n2 = BOARD.nodes[connection.node2];
+			//Setup where the line will be
 			c.beginPath();
 			c.moveTo(n1.x, n1.y);
 			c.lineTo(n2.x, n2.y);
+
+			//Do the outline stroke
+			c.strokeStyle = 'black';
+			c.lineWidth = 7;
 			if (connection.tunnel) {
-				c.strokeStyle = 'black';
-				c.lineWidth = 4;
+				c.setLineDash([5,2]);
 			} else {
-				c.strokeStyle = 'black';
-				c.lineWidth = 5;
+				c.removeLineDash();
 			}
 			c.stroke();
-			c.lineWidth = 3;
+
+			//Do the main stroke
+			c.removeLineDash();
+			c.lineWidth = 4;
 			c.strokeStyle = COLOURS[connection.colour1].colour;
 			c.stroke();
+			if (connection.colour2 !== 'none') {
+				c.setLineDash([10, 10]);
+				c.strokeStyle = COLOURS[connection.colour2].colour;
+				c.stroke();
+			}
 		});
 	}
-
 
 	if (qs('#show_nodes').checked) {
 		//Draw the nodes
@@ -333,7 +349,7 @@ function _add_node(x, y, name) {
 function _remove_node(node_id) {
 	//Remove the node specified by id & any connections it is used by
 	_connections_iter(function(connection) {
-		if (connection.node1_id === node_id || connection.node2_id === node_id) {
+		if (connection.node1 === node_id || connection.node2 === node_id) {
 			_remove_connection(connection.id);
 		}
 	});

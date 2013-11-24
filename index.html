@@ -9,48 +9,51 @@
 		<span id="board_name"></span>
 		<br/>
 
-		<canvas id="board"></canvas>
-		<br/>
+		<span style="float: left;">
+			<canvas id="board"></canvas>
+		</span>
 
-		<label>
-			<input type="radio" name="mode" value="node" checked="checked"/>
-			Node Edit
-		</label>
-		<label>
-			<input type="radio" name="mode" value="connection"/>
-			Connection Edit
-		</label>
-		<label>
-			<input type="radio" name="mode" value="play"/>
-			Play
-		</label>
-		<br/>
+		<span>
+			<label>
+				<input type="radio" name="mode" value="node" checked="checked"/>
+				Node Edit
+			</label>
+			<label>
+				<input type="radio" name="mode" value="connection"/>
+				Connection Edit
+			</label>
+			<label>
+				<input type="radio" name="mode" value="play"/>
+				Play
+			</label>
+			<br/>
 
-		<input type="file" id="image_loader" style="display:none;"/>
-		<button id="load_image">Change image</button>
-		<button id="import_board">Import Board</button>
-		<button id="export_board">Export Board</button>
-		<br/>
+			<input type="file" id="image_loader" style="display:none;"/>
+			<button id="load_image">Change image</button>
+			<button id="import_board">Import Board</button>
+			<button id="export_board">Export Board</button>
+			<br/>
 
-		Show:
-		<label>
-			<input id="show_image" class="board_option" type="checkbox" checked="checked"/>
-			Image
-		</label>
-		<label>
-			<input id="show_nodes" class="board_option" type="checkbox" checked="checked"/>
-			Nodes
-		</label>
-		<label>
-			<input id="show_connections" class="board_option" type="checkbox" checked="checked"/>
-			Connections
-		</label>
-		<br/>
+			Show:
+			<label>
+				<input id="show_image" class="board_option" type="checkbox" checked="checked"/>
+				Image
+			</label>
+			<label>
+				<input id="show_nodes" class="board_option" type="checkbox" checked="checked"/>
+				Nodes
+			</label>
+			<label>
+				<input id="show_connections" class="board_option" type="checkbox" checked="checked"/>
+				Connections
+			</label>
+			<br/>
 
-		<button id="new_board">New Board</button>
-		<button id="save_board">Save Board</button>
-		<button id="rename_board">Rename board</button>
-		<button id="load_board">Load Board</button>
+			<button id="new_board">New Board</button>
+			<button id="save_board">Save Board</button>
+			<button id="rename_board">Rename board</button>
+			<button id="load_board">Load Board</button>
+		</span>
 
 		<div id="mask">
 			<div id="dialog_node" class="dialog">
