@@ -558,6 +558,7 @@ function _board_option_change() {
 function _import_board_click() {
 	//Import a board from a textual representation
 	qs('#import_json').value = '';
+	qs('#import_file').value = '';
 	_open_dialog('#dialog_import');
 }
 
@@ -762,13 +763,36 @@ function _export_close_click() {
 
 function _import_import_click() {
 	//Import the board that has been pasted into the textarea
-	var board_json = qs('#import_json').value;
-	if (board_json) {
+	var textarea_json = qs('#import_json').value;
+	//Check if there is text pasted in first
+	if (textarea_json) {
+		load_json(textarea_json);
+	} else {
+		//Otherwise, try the file uploader
+		var file = qs('#import_file').files[0];
+
+		if (file) {
+			// Read the File objects in this FileList.
+			var reader = new FileReader();
+			// Listener for the onload event
+			reader.onload = function(e) {
+				var b64_json = e.target.result,
+					loaded_json = atob(b64_json.split(',')[1]);
+				load_json(loaded_json);
+			};
+			// Read in the file as a data URL.
+			reader.readAsDataURL(file);
+		} else {
+			_close_dialogs();
+		}
+	}
+
+	function load_json(board_json) {
 		var board = JSON.parse(board_json);
 		BOARD = board;
 		_draw_board();
+		_close_dialogs();
 	}
-	_close_dialogs();
 }
 
 function _import_cancel_click() {
@@ -1078,13 +1102,6 @@ document.onreadystatechange = function() {
 	board.width = 800;
 	board.height = 510;
 
-	if (localStorage.last_board) {
-		_load_board(localStorage.last_board);
-	} else {
-		_new_board();
-	}
-	_draw_board();
-
 	//Populate the colour selects
 	function gen_colour(name, colour, text) {
 		return '<label style="border: 1px solid black; background: '+colour.colour+'">'
@@ -1104,4 +1121,12 @@ document.onreadystatechange = function() {
 	//Put the HTML on the form
 	qs('#connection_colour1').innerHTML = html_colours1;
 	qs('#connection_colour2').innerHTML = html_colours2;
+
+	//Setup an initial board
+	if (localStorage.last_board && localStorage.last_board !== 'undefined') {
+		_load_board(localStorage.last_board);
+	} else {
+		_new_board();
+	}
+	_draw_board();
 };
