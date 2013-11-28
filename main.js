@@ -143,9 +143,58 @@ NodeList.prototype.forEach = function(func) {
 	Array.prototype.slice.call(this, 0).forEach(func);
 }
 
-CanvasRenderingContext2D.prototype.removeLineDash = function() {
+CanvasRenderingContext2D.prototype.drawLine = function(n1, n2, dash) {
 	//Remove any dash that's been set
-	this.setLineDash([1,0]);
+	if (dash) {
+		if (this.setLineDash) {
+			//Use the builtin dashing
+			this.beginPath();
+			this.moveTo(n1.x, n1.y);
+			this.lineTo(n2.x, n2.y);
+			this.setLineDash(dash);
+			this.stroke();
+			this.setLineDash([1,0]);
+		} else {
+			//Manual dashing :(
+			if (dash.length != 2) {
+				throw new Exception('Cannot manual dash with anything other than 2 dash args!');
+			}
+			var dx = n2.x - n1.x,
+				dy = n2.y - n1.y,
+				//Seems like atan doesn't work as expected for -ve dx values?
+				angle = Math.atan(dy / dx) - (dx < 0 ? Math.PI : 0),
+				total_length = Math.sqrt(dx*dx + dy*dy),
+				length = 0,
+				//x & y are the current position we are at in the dash
+				x = n1.x,
+				y = n1.y,
+				//i*_line are the x & y distance which needs to be moved to draw this bit of the dash
+				ix_line = dash[0] * Math.cos(angle),
+				iy_line = dash[0] * Math.sin(angle),
+				//i*_move are the x & y distance which needs to be moved to get to the next bit of the dash
+				ix_move = (dash[0] + dash[1]) * Math.cos(angle),
+				iy_move = (dash[0] + dash[1]) * Math.sin(angle);
+			//Now draw the dashed line!
+			while (length < total_length) {
+				//Draw this bit of the dash
+				this.beginPath();
+				this.moveTo(x, y);
+				this.lineTo(x + ix_line, y + iy_line);
+				this.stroke();
+				//Move to the next position
+				x += ix_move;
+				y += iy_move;
+				//Record that we've moved along some more
+				length += dash[0] + dash[1];
+			}
+		}
+	} else {
+		//Normal line
+		this.beginPath();
+		this.moveTo(n1.x, n1.y);
+		this.lineTo(n2.x, n2.y);
+		this.stroke();
+	}
 }
 
 /********************************************\
@@ -260,30 +309,25 @@ function _draw_board() {
 		_connections_iter(function(connection) {
 			var n1 = BOARD.nodes[connection.node1],
 				n2 = BOARD.nodes[connection.node2];
-			//Setup where the line will be
-			c.beginPath();
-			c.moveTo(n1.x, n1.y);
-			c.lineTo(n2.x, n2.y);
 
 			//Do the outline stroke
-			c.strokeStyle = 'black';
 			c.lineWidth = 7;
+			c.strokeStyle = 'black';
 			if (connection.tunnel) {
-				c.setLineDash([5,2]);
+				c.drawLine(n1, n2, [5,2]);
 			} else {
-				c.removeLineDash();
+				c.drawLine(n1, n2);
 			}
-			c.stroke();
 
 			//Do the main stroke
-			c.removeLineDash();
 			c.lineWidth = 4;
 			c.strokeStyle = COLOURS[connection.colour1].colour;
-			c.stroke();
+			c.drawLine(n1, n2);
+
+			//Do the secondary stroke
 			if (connection.colour2 !== 'none') {
-				c.setLineDash([10, 10]);
 				c.strokeStyle = COLOURS[connection.colour2].colour;
-				c.stroke();
+				c.drawLine(n1, n2, [10, 10]);
 			}
 		});
 	}
