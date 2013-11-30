@@ -590,8 +590,18 @@ function _image_loader_change(e) {
 
 function _export_board_click() {
 	//Export a board to textual representation
-	qs('#export_json').value = JSON.stringify(BOARD);
-	_open_dialog('#dialog_export');
+	window.URL = window.webkitURL || window.URL;
+
+	var board_blob = new Blob([JSON.stringify(BOARD)], {type: 'text/json'}),
+		board_object_url = window.URL.createObjectURL(board_blob);
+
+	var a = document.createElement("a");
+	a.href = board_object_url;
+	a.download = BOARD.name + '.json';
+	a.click();
+	setTimeout(function() {
+		window.URL.revokeObjectURL(board_object_url);
+	}, 1000)
 }
 
 function _board_option_change() {
@@ -789,15 +799,6 @@ function _board_delete_click() {
 
 function _board_cancel_click() {
 	//Close the board dialog
-	_close_dialogs();
-}
-
-/********************************************\
-	Export dialog click listeners
-\********************************************/
-
-function _export_close_click() {
-	//Close the export dialog
 	_close_dialogs();
 }
 
@@ -1115,9 +1116,6 @@ document.onreadystatechange = function() {
 	qs('#board_load').addEventListener('click', _board_load_click);
 	qs('#board_delete').addEventListener('click', _board_delete_click);
 	qs('#board_cancel').addEventListener('click', _board_cancel_click);
-
-	//Export dialog click handlers
-	qs('#export_close').addEventListener('click', _export_close_click);
 
 	//Import dialog click handlers
 	qs('#import_import').addEventListener('click', _import_import_click);
