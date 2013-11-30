@@ -6,42 +6,30 @@
 		<script type="text/javascript" src="main.js"></script>
 	</head>
 	<body>
-		<span id="board_name"></span>
-		<br/>
+		<div id="header">
+			<span id="board_name"></span>
+			<span class="nice_buttons">
+				<span class="nice_button mode_button selected" data-value="play">&#9654;</span>
+				<span class="nice_button mode_button" data-value="node">&#9679;</span>
+				<span class="nice_button mode_button" data-value="connection">&#12336;</span>
+			</span>
+			<span class="nice_buttons">
+				<span class="nice_button show_button checked" id="show_image">I</span>
+				<span class="nice_button show_button checked" id="show_nodes">&#9679;</span>
+				<span class="nice_button show_button checked" id="show_labels">T</span>
+				<span class="nice_button show_button checked" id="show_connections">&#12336;</span>
+			</span>
+		</div>
 
 		<span style="float: left;">
 			<canvas id="board"></canvas>
 		</span>
 
 		<span>
-			<span class="mode_button selected" data-value="play">&#9654;</span>
-			<span class="mode_button" data-value="node">&#9679;</span>
-			<span class="mode_button" data-value="connection">&#12336;</span>
-			<br/>
-
 			<input type="file" id="image_loader" style="display:none;"/>
 			<button id="load_image">Change image</button>
 			<button id="import_board">Import Board</button>
 			<button id="export_board">Export Board</button>
-			<br/>
-
-			Show:
-			<label>
-				<input id="show_image" class="board_option" type="checkbox" checked="checked"/>
-				Image
-			</label>
-			<label>
-				<input id="show_nodes" class="board_option" type="checkbox" checked="checked"/>
-				Nodes
-			</label>
-			<label>
-				<input id="show_labels" class="board_option" type="checkbox" checked="checked"/>
-				Labels
-			</label>
-			<label>
-				<input id="show_connections" class="board_option" type="checkbox" checked="checked"/>
-				Connections
-			</label>
 			<br/>
 
 			<button id="new_board">New Board</button>

@@ -1,3 +1,6 @@
+body {
+	margin: 2px;
+}
 #board_name {
 	font-weight: bold;
 	font-size: 18pt;
@@ -29,13 +32,18 @@ textarea {
 	height: 300px;
 }
 
-.mode_button {
-	font-size: 24pt;
+.nice_buttons {
+	margin-left:20px;
+}
+.nice_button {
+	font-size: 16pt;
+	font-family: Universalia;
+	font-weight: bold;
 	border: 1px solid black;
 	border-radius: 10px;
 	width: 37px;
 	display: inline-block;
-	margin: 0px;
+	margin-bottom: 2px;
 	text-align: center;
 	cursor: pointer;
 	-webkit-user-select: none;
@@ -44,7 +52,6 @@ textarea {
 	user-select: none;
 	background: #ddd;
 }
-
-.mode_button.selected {
+.nice_button.selected, .nice_button.checked {
 	background: #888;
 }

@@ -197,6 +197,25 @@ CanvasRenderingContext2D.prototype.drawLine = function(n1, n2, dash) {
 	}
 }
 
+function _class_regexp(klass) {
+	return new RegExp('\\b'+klass+'\\b');
+}
+Node.prototype.hasClass = function(klass) {
+	return !!this.className.match(_class_regexp(klass));
+}
+
+Node.prototype.addClass = function(klass) {
+	this.className += ' ' + klass;
+	//Chainable FTW :)
+	return this;
+}
+
+Node.prototype.removeClass = function(klass) {
+	this.className = this.className.replace(_class_regexp(klass), '');
+	//Chainable FTW :)
+	return this;
+}
+
 /********************************************\
 	Board helpers
 \********************************************/
@@ -298,13 +317,13 @@ function _draw_board() {
 	c.fillStyle = 'white';
 	c.fillRect(0, 0, c.canvas.width, c.canvas.height);
 	//Show the background image
-	if (BOARD.image && qs('#show_image').checked) {
+	if (BOARD.image && qs('#show_image').hasClass('checked')) {
 		var img = new Image();
 		img.src = BOARD.image;
 		c.drawImage(img, 0, 0);
 	}
 
-	if (qs('#show_connections').checked) {
+	if (qs('#show_connections').hasClass('checked')) {
 		//Draw the connections
 		_connections_iter(function(connection) {
 			var n1 = BOARD.nodes[connection.node1],
@@ -332,7 +351,7 @@ function _draw_board() {
 		});
 	}
 
-	if (qs('#show_nodes').checked) {
+	if (qs('#show_nodes').hasClass('checked')) {
 		//Draw the nodes
 		c.fillStyle = 'black';
 		c.lineWidth = 0.5;
@@ -358,7 +377,7 @@ function _draw_board() {
 		});
 	}
 
-	if (qs('#show_labels').checked) {
+	if (qs('#show_labels').hasClass('checked')) {
 		//Draw the labels
 		c.fillStyle = 'black';
 		c.lineWidth = 1;
@@ -531,9 +550,24 @@ function _remove_connection(connection_id) {
 function _mode_button_click() {
 	//Update the selected mode
 	qsa('.mode_button').forEach(function(e) {
-		e.className = e.className.replace(/\bselected\b/,'');
+		//Unselect everything
+		e.removeClass('selected');
 	});
-	this.className += ' selected';
+	//Select this one
+	this.addClass('selected');
+}
+
+function _show_button_click() {
+	//Update the show mode
+	this.hasClass('x');
+	if (this.hasClass('checked')) {
+		//Remove checked
+		this.removeClass('checked');
+	} else {
+		//Add checked
+		this.addClass('checked');
+	}
+	_draw_board();
 }
 
 function _load_image_click() {
@@ -610,11 +644,6 @@ function _export_board_click() {
 	setTimeout(function() {
 		window.URL.revokeObjectURL(board_object_url);
 	}, 1000)
-}
-
-function _board_option_change() {
-	//Change whether something about the board is shown or hidden
-	_draw_board();
 }
 
 function _import_board_click() {
@@ -1091,14 +1120,13 @@ document.onreadystatechange = function() {
 	qsa(".mode_button").forEach(function(e) {
 		e.addEventListener('click', _mode_button_click);
 	});
+	qsa(".show_button").forEach(function(e) {
+		e.addEventListener('click', _show_button_click);
+	});
 	qs('#load_image').addEventListener('click', _load_image_click);
 	qs("#image_loader").addEventListener('change', _image_loader_change);
 	qs('#import_board').addEventListener('click', _import_board_click);
 	qs('#export_board').addEventListener('click', _export_board_click);
-
-	qsa(".board_option").forEach(function(e) {
-		e.addEventListener('change', _board_option_change);
-	});
 
 	qs('#new_board').addEventListener('click', _new_board_click);
 	qs('#save_board').addEventListener('click', _save_board_click);
