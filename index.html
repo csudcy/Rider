@@ -7,17 +7,18 @@
 	</head>
 	<body>
 		<div id="header">
+			<button id="open_menu">&nbsp;&nbsp;&gt;&gt;&nbsp;&nbsp;</button>
 			<span id="board_name"></span>
-			<span class="nice_buttons">
-				<span class="nice_button mode_button selected" data-value="play">&#9654;</span>
-				<span class="nice_button mode_button" data-value="node">&#9679;</span>
-				<span class="nice_button mode_button" data-value="connection">&#12336;</span>
-			</span>
 			<span class="nice_buttons">
 				<span class="nice_button show_button checked" id="show_image">I</span>
 				<span class="nice_button show_button checked" id="show_nodes">&#9679;</span>
 				<span class="nice_button show_button checked" id="show_labels">T</span>
 				<span class="nice_button show_button checked" id="show_connections">&#12336;</span>
+			</span>
+			<span class="nice_buttons">
+				<span class="nice_button mode_button selected" data-value="play">&#9654;</span>
+				<span class="nice_button mode_button" data-value="node">&#9679;</span>
+				<span class="nice_button mode_button" data-value="connection">&#12336;</span>
 			</span>
 		</div>
 
@@ -25,24 +26,24 @@
 			<canvas id="board"></canvas>
 		</span>
 
-		<span>
-			<input type="file" id="image_loader" style="display:none;"/>
-			<button id="load_image">Change image</button>
-			<button id="import_board">Import Board</button>
-			<button id="export_board">Export Board</button>
-			<br/>
-
-			<button id="new_board">New Board</button>
-			<button id="save_board">Save Board</button>
-			<button id="rename_board">Rename board</button>
-			<button id="load_board">Load Board</button>
-			<br/>
-
+		<span id="objectives">
 			<button id="add_objective">Add Objective</button>
 			<button id="clear_objectives">Clear Objectives</button>
 		</span>
 
 		<div id="mask">
+			<div id="menu">
+				<input type="file" id="image_loader" style="display:none;"/>
+				<button id="close_menu">&nbsp;&nbsp;&lt;&lt;&nbsp;&nbsp;</button><br/>
+				<button id="new_board">New Board</button><br/>
+				<button id="load_board">Load Board</button><br/>
+				<button id="import_board">Import Board</button><br/>
+				<button id="load_image">Change image</button><br/>
+				<button id="rename_board">Rename board</button><br/>
+				<button id="save_board">Save Board</button><br/>
+				<button id="export_board">Export Board</button><br/>
+			</div>
+
 			<div id="dialog_node" class="dialog">
 				<label>
 					Id:

@@ -1,9 +1,10 @@
 "use strict";
 /*
 TODO:
- * Station name placement
  * Show conection length & locomotives
- * Play
+ * Make menu nicer
+ * Improve objectives
+ * Remember show option states
 
 Details:
 	Node
@@ -88,20 +89,20 @@ function _get_mode() {
 function _open_dialog(dialog_selector, default_element_selector) {
 	//Show the given dialog
 	qs('#mask').style.display = 'block';
-	qsa('.dialog').forEach(function(e) {
-		e.style.display = 'none';
-	});
 	qs(dialog_selector).style.display = 'block';
 	if (default_element_selector) {
 		qs(default_element_selector).focus();
 		qs(default_element_selector).select();
 	}
-
 }
 
 function _close_dialogs() {
 	//Hide the dialog mask
 	qs('#mask').style.display = 'none';
+	//Hide everything in the dialog mask
+	qsa('#mask div').forEach(function(e) {
+		e.style.display = 'none';
+	});
 }
 
 //Shortest distance from point to line segment
@@ -544,7 +545,7 @@ function _remove_connection(connection_id) {
 }
 
 /********************************************\
-	Main click listeners
+	Main click handlers
 \********************************************/
 
 function _mode_button_click() {
@@ -568,6 +569,57 @@ function _show_button_click() {
 		this.addClass('checked');
 	}
 	_draw_board();
+}
+
+/********************************************\
+	Menu click handlers
+\********************************************/
+
+function _open_menu_click() {
+	//Open the menu
+	_open_dialog('#menu');
+}
+
+function _close_menu_click() {
+	//Close the menu
+	_close_dialogs();
+}
+
+function _new_board_click() {
+	//Create a new board
+	if (confirm('Really create a new board?')) {
+		_new_board();
+		_draw_board();
+	}
+}
+
+function _load_board_click() {
+	//Load a board
+	//Put the list of boards in the dialog
+	var html = '', first = true;
+	_boards_iter(function(board) {
+		html += '<label><input type="radio" name="board" value="'+board.name+'"';
+		if (first) {
+			html += ' checked="checked"';
+			first = false;
+		}
+		html += '/>'+board.name+'</label><br/>';
+	})
+	if (html === '') {
+		alert('No saved boards found!');
+		_close_dialogs();
+		return;
+	}
+	qs('#board_list').innerHTML = html;
+	//Show the dialog
+	_open_dialog('#dialog_board');
+}
+
+function _import_board_click() {
+	//Import a board from a textual representation
+	qs('#import_json').value = '';
+	qs('#import_file').value = '';
+	_open_dialog('#dialog_import');
 }
 
 function _load_image_click() {
@@ -630,6 +682,20 @@ function _image_loader_change(e) {
 	reader.readAsDataURL(file);
 };
 
+function _rename_board_click() {
+	//Rename the current board
+	var new_board_name = prompt('Board name:', BOARD.name);
+	if (new_board_name) {
+		_rename_board(new_board_name);
+		_draw_board();
+	}
+}
+
+function _save_board_click() {
+	//Save the current board
+	_save_board();
+}
+
 function _export_board_click() {
 	//Export a board to textual representation
 	window.URL = window.webkitURL || window.URL;
@@ -646,56 +712,9 @@ function _export_board_click() {
 	}, 1000)
 }
 
-function _import_board_click() {
-	//Import a board from a textual representation
-	qs('#import_json').value = '';
-	qs('#import_file').value = '';
-	_open_dialog('#dialog_import');
-}
-
-function _new_board_click() {
-	//Create a new board
-	if (confirm('Really create a new board?')) {
-		_new_board();
-		_draw_board();
-	}
-}
-
-function _save_board_click() {
-	//Save the current board
-	_save_board();
-}
-
-function _rename_board_click() {
-	//Rename the current board
-	var new_board_name = prompt('Board name:', BOARD.name);
-	if (new_board_name) {
-		_rename_board(new_board_name);
-		_draw_board();
-	}
-}
-
-function _load_board_click() {
-	//Load a board
-	//Put the list of boards in the dialog
-	var html = '', first = true;
-	_boards_iter(function(board) {
-		html += '<label><input type="radio" name="board" value="'+board.name+'"';
-		if (first) {
-			html += ' checked="checked"';
-			first = false;
-		}
-		html += '/>'+board.name+'</label><br/>';
-	})
-	if (html === '') {
-		alert('No saved boards found!');
-		_close_dialogs();
-		return;
-	}
-	qs('#board_list').innerHTML = html;
-	//Show the dialog
-	_open_dialog('#dialog_board');
-}
+/********************************************\
+	Objective click handlers
+\********************************************/
 
 function _add_objective_click() {
 	//Add an objective
@@ -727,7 +746,7 @@ function _clear_objectives_click() {
 }
 
 /********************************************\
-	Node dialog click listeners
+	Node dialog click handlers
 \********************************************/
 
 function _node_ok_click() {
@@ -762,7 +781,7 @@ function _node_cancel_click() {
 }
 
 /********************************************\
-	Connection dialog click listeners
+	Connection dialog click handlers
 \********************************************/
 
 function _connection_ok_click() {
@@ -808,7 +827,7 @@ function _connection_cancel_click() {
 
 
 /********************************************\
-	Board dialog click listeners
+	Board dialog click handlers
 \********************************************/
 
 function _board_load_click() {
@@ -840,7 +859,7 @@ function _board_cancel_click() {
 }
 
 /********************************************\
-	Import dialog click listeners
+	Import dialog click handlers
 \********************************************/
 
 function _import_import_click() {
@@ -883,7 +902,7 @@ function _import_cancel_click() {
 }
 
 /********************************************\
-	Objective dialog click listeners
+	Objective dialog click handlers
 \********************************************/
 
 function _objective_add_click() {
@@ -903,7 +922,7 @@ function _objective_cancel_click() {
 }
 
 /********************************************\
-	Canvas listeners
+	Canvas handlers
 \********************************************/
 
 //Mouse tracking vars
@@ -1116,6 +1135,7 @@ function _canvas_mouse_up(e) {
 
 document.onreadystatechange = function() {
 	if (document.readyState !== 'complete') return;
+
 	//General click handlers
 	qsa(".mode_button").forEach(function(e) {
 		e.addEventListener('click', _mode_button_click);
@@ -1123,16 +1143,20 @@ document.onreadystatechange = function() {
 	qsa(".show_button").forEach(function(e) {
 		e.addEventListener('click', _show_button_click);
 	});
+
+	//Menu click handlers
+	qs('#open_menu').addEventListener('click', _open_menu_click);
+	qs('#close_menu').addEventListener('click', _close_menu_click);
+	qs('#new_board').addEventListener('click', _new_board_click);
+	qs('#load_board').addEventListener('click', _load_board_click);
+	qs('#import_board').addEventListener('click', _import_board_click);
 	qs('#load_image').addEventListener('click', _load_image_click);
 	qs("#image_loader").addEventListener('change', _image_loader_change);
-	qs('#import_board').addEventListener('click', _import_board_click);
+	qs('#rename_board').addEventListener('click', _rename_board_click);
+	qs('#save_board').addEventListener('click', _save_board_click);
 	qs('#export_board').addEventListener('click', _export_board_click);
 
-	qs('#new_board').addEventListener('click', _new_board_click);
-	qs('#save_board').addEventListener('click', _save_board_click);
-	qs('#rename_board').addEventListener('click', _rename_board_click);
-	qs('#load_board').addEventListener('click', _load_board_click);
-
+	//Objective click handlers
 	qs('#add_objective').addEventListener('click', _add_objective_click);
 	qs('#clear_objectives').addEventListener('click', _clear_objectives_click);
 
@@ -1173,7 +1197,7 @@ document.onreadystatechange = function() {
 		}
 	});
 
-	//Add canvas mouse listeners
+	//Add canvas mouse handlers
 	var board = qs('#board');
 	board.addEventListener('mousemove', _canvas_mouse_move);
 	board.addEventListener('mousedown', _canvas_mouse_down);

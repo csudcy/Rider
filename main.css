@@ -1,6 +1,23 @@
 body {
 	margin: 2px;
 }
+
+#open_menu {
+	padding-top: 4px;
+	font-size: 16pt;
+}
+#menu {
+	width: 200px;
+	height: 100%;
+}
+#menu button {
+	font-size: 16pt;
+	width: 100%;
+}
+#close_menu {
+	width: auto !important;
+}
+
 #board_name {
 	font-weight: bold;
 	font-size: 18pt;
@@ -19,6 +36,9 @@ body {
 	background-color: rgba(0, 0, 0, 0.75);
 	display: none;
 }
+#mask div {
+	display: none;
+}
 .dialog {
 	background-color: white;
 	width: 30%;
@@ -33,7 +53,8 @@ textarea {
 }
 
 .nice_buttons {
-	margin-left:20px;
+	margin-right: 50px;
+	float: right;
 }
 .nice_button {
 	font-size: 16pt;
