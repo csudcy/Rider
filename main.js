@@ -2,7 +2,7 @@
 /*
 TODO:
  * Show conection length & locomotives
- * Remember show option states
+ * Board resizing
 
 Details:
 	Node
@@ -82,6 +82,14 @@ function qsa(s) {
 function _get_mode() {
 	//Get the currently selected mode
 	return qs('.mode_button.selected').getAttribute('data-value');
+}
+
+function _set_mode(mode) {
+	//Set the currently selected mode
+	qsa('.mode_button').forEach(function(e) {
+		e.removeClass('selected');
+	})
+	qs('#mode_'+mode).addClass('selected');
 }
 
 function _open_dialog(dialog_selector, default_element_selector) {
@@ -554,11 +562,11 @@ function _mode_button_click() {
 	});
 	//Select this one
 	this.addClass('selected');
+	localStorage.mode = _get_mode();
 }
 
 function _show_button_click() {
 	//Update the show mode
-	this.hasClass('x');
 	if (this.hasClass('checked')) {
 		//Remove checked
 		this.removeClass('checked');
@@ -566,6 +574,7 @@ function _show_button_click() {
 		//Add checked
 		this.addClass('checked');
 	}
+	localStorage[this.id] = this.hasClass('checked');
 	_draw_board();
 }
 
@@ -1181,8 +1190,17 @@ document.onreadystatechange = function() {
 	qsa(".mode_button").forEach(function(e) {
 		e.addEventListener('click', _mode_button_click);
 	});
+	//Load the previous state
+	if (localStorage.mode !== undefined) {
+		_set_mode(localStorage.mode);
+	}
 	qsa(".show_button").forEach(function(e) {
 		e.addEventListener('click', _show_button_click);
+
+		//Load the previous state
+		if (localStorage[e.id] === "false") {
+			e.removeClass('checked');
+		}
 	});
 
 	//Menu click handlers
