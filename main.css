@@ -26,3 +26,23 @@ textarea {
 	width: 95%;
 	height: 300px;
 }
+
+.mode_button {
+	font-size: 24pt;
+	border: 1px solid black;
+	border-radius: 10px;
+	width: 37px;
+	display: inline-block;
+	margin: 0px;
+	text-align: center;
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	background: #ddd;
+}
+
+.mode_button.selected {
+	background: #888;
+}

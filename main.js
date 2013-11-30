@@ -82,7 +82,7 @@ function qsa(s) {
 
 function _get_mode() {
 	//Get the currently selected mode
-	return qs('[name=mode]:checked').value;
+	return qs('.mode_button.selected').getAttribute('data-value');
 }
 
 function _open_dialog(dialog_selector, default_element_selector) {
@@ -527,6 +527,14 @@ function _remove_connection(connection_id) {
 /********************************************\
 	Main click listeners
 \********************************************/
+
+function _mode_button_click() {
+	//Update the selected mode
+	qsa('.mode_button').forEach(function(e) {
+		e.className = e.className.replace(/\bselected\b/,'');
+	});
+	this.className += ' selected';
+}
 
 function _load_image_click() {
 	//Load a background image for this board
@@ -1080,6 +1088,9 @@ function _canvas_mouse_up(e) {
 document.onreadystatechange = function() {
 	if (document.readyState !== 'complete') return;
 	//General click handlers
+	qsa(".mode_button").forEach(function(e) {
+		e.addEventListener('click', _mode_button_click);
+	});
 	qs('#load_image').addEventListener('click', _load_image_click);
 	qs("#image_loader").addEventListener('change', _image_loader_change);
 	qs('#import_board').addEventListener('click', _import_board_click);
