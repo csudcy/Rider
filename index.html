@@ -9,12 +9,19 @@
 		<div id="header">
 			<button id="open_menu">&nbsp;&nbsp;&gt;&gt;&nbsp;&nbsp;</button>
 			<span id="board_name"></span>
+
+			<span style="float: right;">
+				<button id="add_objective">+</button>
+				<button id="open_objectives">&nbsp;&nbsp;&lt;&lt;&nbsp;&nbsp;</button>
+			</span>
+
 			<span class="nice_buttons">
 				<span class="nice_button show_button checked" id="show_image">I</span>
 				<span class="nice_button show_button checked" id="show_nodes">&#9679;</span>
 				<span class="nice_button show_button checked" id="show_labels">T</span>
 				<span class="nice_button show_button checked" id="show_connections">&#12336;</span>
 			</span>
+
 			<span class="nice_buttons">
 				<span class="nice_button mode_button selected" data-value="play">&#9654;</span>
 				<span class="nice_button mode_button" data-value="node">&#9679;</span>
@@ -24,11 +31,6 @@
 
 		<span style="float: left;">
 			<canvas id="board"></canvas>
-		</span>
-
-		<span id="objectives">
-			<button id="add_objective">Add Objective</button>
-			<button id="clear_objectives">Clear Objectives</button>
 		</span>
 
 		<div id="mask">
@@ -42,6 +44,12 @@
 				<button id="rename_board">Rename board</button><br/>
 				<button id="save_board">Save Board</button><br/>
 				<button id="export_board">Export Board</button><br/>
+			</div>
+
+			<div id="objectives">
+				<button id="close_objectives">&nbsp;&nbsp;&gt;&gt;&nbsp;&nbsp;</button><br/>
+				<button id="clear_objectives">Clear Objectives</button>
+				<ul id="objective_list"></ul>
 			</div>
 
 			<div id="dialog_node" class="dialog">

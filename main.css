@@ -2,20 +2,47 @@ body {
 	margin: 2px;
 }
 
-#open_menu {
+#open_menu, #open_objectives, #add_objective {
 	padding-top: 4px;
 	font-size: 16pt;
 }
-#menu {
-	width: 200px;
+#menu, #objectives {
+	width: 255px;
 	height: 100%;
+	padding: 5px;
 }
-#menu button {
+#objectives {
+	float: right;
+}
+#menu button, #objectives button {
 	font-size: 16pt;
+}
+#menu button, #clear_objectives {
 	width: 100%;
 }
-#close_menu {
+#close_menu, #close_objectives {
 	width: auto !important;
+}
+#close_objectives {
+	float: right;
+}
+#objective_list {
+	margin: 0px;
+}
+#objective_list li {
+	background: white;
+	list-style-type: none;
+	margin-left: -41px;
+	border-radius: 10px;
+	margin-bottom: 5px;
+	padding-left: 5px;
+}
+#objective_list li span {
+	display: inline-block;
+	width: 20px;
+	height: 25px;
+	margin-bottom: -6px;
+	margin-right: 5px;
 }
 
 #board_name {
@@ -36,7 +63,7 @@ body {
 	background-color: rgba(0, 0, 0, 0.75);
 	display: none;
 }
-#mask div {
+#mask>div {
 	display: none;
 }
 .dialog {

@@ -2,8 +2,6 @@
 /*
 TODO:
  * Show conection length & locomotives
- * Make menu nicer
- * Improve objectives
  * Remember show option states
 
 Details:
@@ -100,7 +98,7 @@ function _close_dialogs() {
 	//Hide the dialog mask
 	qs('#mask').style.display = 'none';
 	//Hide everything in the dialog mask
-	qsa('#mask div').forEach(function(e) {
+	qsa('#mask>div').forEach(function(e) {
 		e.style.display = 'none';
 	});
 }
@@ -716,6 +714,41 @@ function _export_board_click() {
 	Objective click handlers
 \********************************************/
 
+function _open_objective_click() {
+	//Open the objectives list
+	var html = '';
+	if (BOARD.objectives.length === 0) {
+		html = '<li>No objectives added!</li>';
+	} else {
+		BOARD.objectives.forEach(function(objective, index) {
+			var n1 = BOARD.nodes[objective.node1],
+				n2 = BOARD.nodes[objective.node2],
+				colour = COLOURS[COLOUR_KEYS[index]].colour;
+
+			html += '<li>'
+				+'<button data-index="'+index+'">&#10007;</button>'
+				+'<span style="background-color: '+colour+';"></span>'
+				+n1.name
+				+' -- '
+				+n2.name
+				+'</li>';
+		});
+	}
+	//Put the HTML on the form
+	qs('#objective_list').innerHTML = html;
+	//Bind the delete listeners
+	qsa('#objective_list button').forEach(function(e) {
+		e.addEventListener('click', _delete_objective_click);
+	})
+	//Show the objectives dialog
+	_open_dialog('#objectives');
+}
+
+function _close_objective_click() {
+	//Close the objectives
+	_close_dialogs();
+}
+
 function _add_objective_click() {
 	//Add an objective
 	//Sort nodes by name
@@ -742,7 +775,15 @@ function _clear_objectives_click() {
 	if (confirm('Really clear objectives?')) {
 		BOARD.objectives.length = 0;
 		_draw_board();
+		_open_objective_click();
 	}
+}
+
+function _delete_objective_click() {
+	var index = parseInt(this.getAttribute('data-index'), 10);
+	BOARD.objectives.splice(index, 1);
+	_draw_board();
+	_open_objective_click();
 }
 
 /********************************************\
@@ -1157,6 +1198,8 @@ document.onreadystatechange = function() {
 	qs('#export_board').addEventListener('click', _export_board_click);
 
 	//Objective click handlers
+	qs('#open_objectives').addEventListener('click', _open_objective_click);
+	qs('#close_objectives').addEventListener('click', _close_objective_click);
 	qs('#add_objective').addEventListener('click', _add_objective_click);
 	qs('#clear_objectives').addEventListener('click', _clear_objectives_click);
 
