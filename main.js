@@ -2,7 +2,6 @@
 /*
 TODO:
  * Show conection length & locomotives
- * Board resizing
 
 Details:
 	Node
@@ -313,6 +312,28 @@ function _remove_board(board_name) {
 	} else {
 		alert('Board not found: ' + board_name);
 	}
+}
+
+function _resize_board() {
+	//Work out how the board should be drawn
+	var board = qs('#board'),
+		tw = 800.0,
+		th = 510.0,
+		aw = board.clientWidth,
+		ah = board.clientHeight,
+		wr = aw/tw,
+		hr = ah/th;
+	if (wr < hr) {
+		//Width is the dominant dimension
+		board.width = tw;
+		board.height = hr / wr * th;
+	} else {
+		//Height wins
+		board.width = wr / hr * tw;
+		board.height = th;
+	}
+	//Redraw the board
+	_draw_board();
 }
 
 function _draw_board() {
@@ -1264,10 +1285,6 @@ document.onreadystatechange = function() {
 	board.addEventListener('mousedown', _canvas_mouse_down);
 	board.addEventListener('mouseup', _canvas_mouse_up);
 
-	//Make the canvas the correct size
-	board.width = 800;
-	board.height = 510;
-
 	//Populate the colour selects
 	function gen_colour(name, colour, text) {
 		return '<label style="border: 1px solid black; background: '+colour.colour+'">'
@@ -1294,5 +1311,8 @@ document.onreadystatechange = function() {
 	} else {
 		_new_board();
 	}
-	_draw_board();
+
+	//Make the canvas the correct size
+	window.addEventListener('resize', _resize_board);
+	_resize_board();
 };

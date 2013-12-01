@@ -51,8 +51,9 @@ body {
 }
 #board {
 	border: 1px solid black;
-	width: 800px;
-	height: 510px;
+	position: absolute;
+	width: calc(100% - 6px);
+	height: calc(100% - 45px);
 }
 #mask {
 	position: absolute;
