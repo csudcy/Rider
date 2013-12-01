@@ -63,8 +63,10 @@ var COLOURS = {
 			colour: '#F80'
 		}
 	},
-	COLOUR_KEYS = Object.keys(COLOURS),
+	OBJECTIVE_COLOUR_KEYS = Object.keys(COLOURS),
 	NODE_R = 10;
+//Remove black from the OBJECTIVE_COLOUR_KEYS
+OBJECTIVE_COLOUR_KEYS.splice(OBJECTIVE_COLOUR_KEYS.indexOf('black'), 1);
 
 /********************************************\
 	General helpers
@@ -395,7 +397,7 @@ function _draw_board() {
 		BOARD.objectives.forEach(function(objective, index) {
 			var node1 = BOARD.nodes[objective.node1],
 				node2 = BOARD.nodes[objective.node2];
-			c.fillStyle = COLOURS[COLOUR_KEYS[index]].colour;
+			c.fillStyle = COLOURS[OBJECTIVE_COLOUR_KEYS[index]].colour;
 			c.beginPath();
 			c.arc(node1.x, node1.y, NODE_R/2, 0, 2 * Math.PI);
 			c.fill();
@@ -753,7 +755,7 @@ function _open_objective_click() {
 		BOARD.objectives.forEach(function(objective, index) {
 			var n1 = BOARD.nodes[objective.node1],
 				n2 = BOARD.nodes[objective.node2],
-				colour = COLOURS[COLOUR_KEYS[index]].colour;
+				colour = COLOURS[OBJECTIVE_COLOUR_KEYS[index]].colour;
 
 			html += '<li>'
 				+'<button data-index="'+index+'">&#10007;</button>'
